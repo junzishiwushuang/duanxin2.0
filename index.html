@@ -1,0 +1,3440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>工作台预览</title>
+  <style>
+    :root {
+      --bg: #f4f7fd;
+      --panel: rgba(255, 255, 255, 0.9);
+      --line: #e9eefb;
+      --text: #1f2940;
+      --sub: #8f9ab0;
+      --blue: #6387ff;
+      --blue-2: #81a7ff;
+      --blue-3: #edf3ff;
+      --shadow: 0 14px 34px rgba(89, 114, 186, 0.1);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(110, 142, 255, 0.08), transparent 28%),
+        linear-gradient(180deg, #f8fbff 0%, #f4f7fd 100%);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      padding: 14px 10px;
+      border-right: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(248,250,255,0.95) 100%);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 18px;
+      color: #5472e6;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #8ab0ff, #5d7df3);
+      box-shadow: 0 10px 18px rgba(93, 125, 243, 0.24);
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav-item {
+      border: 0;
+      width: 100%;
+      border-radius: 14px;
+      padding: 10px 4px;
+      font-size: 10px;
+      color: #8e98ae;
+      text-align: center;
+      line-height: 1.35;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .nav-item::before {
+      content: "";
+      display: block;
+      width: 20px;
+      height: 20px;
+      margin: 0 auto 6px;
+      border-radius: 7px;
+      background: #e8efff;
+    }
+
+    .nav-item.active {
+      background: linear-gradient(180deg, #eff4ff, #eaf0ff);
+      color: #4b69de;
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px #e0e9ff;
+    }
+
+    .nav-item.active::before {
+      background: linear-gradient(135deg, #8badff, #5d7df3);
+    }
+
+    .main {
+      min-width: 0;
+      padding: 14px;
+    }
+
+    .shell {
+      max-width: 1460px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      height: 50px;
+      padding: 0 16px;
+      border: 1px solid rgba(233, 238, 251, 0.95);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.82);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar-title {
+      font-size: 13px;
+      color: #9aa4ba;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--sub);
+      position: relative;
+    }
+
+    .top-pill,
+    .top-dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #dfe7fb;
+      background: #fff;
+    }
+
+    .top-pill {
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+    }
+
+    .top-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+
+    .account-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 16px;
+      border: 1px solid #dfe7fb;
+      background: rgba(255,255,255,0.96);
+      color: #6f7b92;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(92, 115, 182, 0.08);
+      flex-shrink: 0;
+    }
+
+    .account-avatar-mini {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7fa2ff, #5f7df5);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .account-drawer {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 228px;
+      padding: 10px;
+      border-radius: 18px;
+      border: 1px solid #dfe7fb;
+      background: rgba(255,255,255,0.98);
+      box-shadow: 0 18px 36px rgba(80, 104, 170, 0.14);
+      backdrop-filter: blur(12px);
+      z-index: 60;
+      overflow: visible;
+    }
+
+    .account-drawer.is-hidden {
+      display: none;
+    }
+
+    .account-headline {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: #5a6783;
+      font-size: 11px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .account-fold {
+      font-size: 14px;
+      color: #9aa5bc;
+      line-height: 1;
+    }
+
+    .account-card {
+      border: 1px solid #e4eafb;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fbfcff, #ffffff);
+      padding: 12px;
+    }
+
+    .account-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .account-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #dfe8ff, #edf2ff);
+      border: 1px solid #dfe7fb;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .account-avatar::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 9px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #4f75f3;
+      transform: translateX(-50%);
+    }
+
+    .account-avatar::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      width: 18px;
+      height: 10px;
+      border-radius: 10px 10px 6px 6px;
+      background: #4f75f3;
+      transform: translateX(-50%);
+    }
+
+    .account-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: #2f3d59;
+      margin-bottom: 2px;
+    }
+
+    .account-meta {
+      font-size: 11px;
+      color: #8f9ab0;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    .account-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #6f7b92;
+      font-weight: 700;
+    }
+
+    .switch {
+      width: 42px;
+      height: 22px;
+      border-radius: 999px;
+      background: #d7dbe4;
+      position: relative;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .account-actions {
+      display: grid;
+      gap: 6px;
+    }
+
+    .account-action {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 30px;
+      color: #5f697f;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .account-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #eef3ff;
+      border: 1px solid #dce5fb;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #5f7df5;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .content {
+      padding-top: 14px;
+    }
+
+    .view-panel {
+      display: block;
+    }
+
+    .view-panel.is-hidden {
+      display: none;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .page-sub {
+      font-size: 11px;
+      color: #9aa5bc;
+      margin-top: 4px;
+    }
+
+    .page-filter {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .ghost-btn {
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid #e3e9fb;
+      background: rgba(255,255,255,0.72);
+      padding: 0 12px;
+      color: #667189;
+      font-size: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(233, 238, 251, 0.95);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .overview-card {
+      padding: 18px;
+      background:
+        radial-gradient(circle at top right, rgba(112, 145, 255, 0.12), transparent 34%),
+        linear-gradient(180deg, rgba(255,255,255,0.94), rgba(250,252,255,0.94));
+    }
+
+    .overview-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .overview-title {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .overview-desc {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #96a0b7;
+    }
+
+    .overview-badge {
+      min-width: 64px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #5673e4;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .summary-total {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #6b8dff, #5977ee);
+      color: #fff;
+      margin-bottom: 14px;
+      box-shadow: 0 16px 28px rgba(92, 121, 238, 0.24);
+    }
+
+    .summary-total-label {
+      font-size: 12px;
+      opacity: 0.84;
+      margin-bottom: 8px;
+    }
+
+    .summary-total-value {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .summary-total-sub {
+      font-size: 11px;
+      opacity: 0.84;
+    }
+
+    .kpi-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .kpi-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid #edf1fd;
+      background: rgba(255,255,255,0.72);
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: #92a0b9;
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .kpi-note {
+      font-size: 11px;
+      color: #b1bad0;
+    }
+
+    .kpi-trend {
+      min-width: 62px;
+      height: 28px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #5d7cf2;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .trend-card {
+      padding: 16px 18px;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .panel-sub {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #98a4bc;
+    }
+
+    .panel-link {
+      font-size: 11px;
+      color: #6d84e9;
+      font-weight: 600;
+    }
+
+    .trend-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .trend-meta-card {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #f8faff;
+      border: 1px solid #edf1fd;
+    }
+
+    .trend-meta-label {
+      font-size: 11px;
+      color: #98a4bc;
+      margin-bottom: 6px;
+    }
+
+    .trend-meta-value {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .trend-meta-note {
+      font-size: 10px;
+      color: #b0b8cc;
+      margin-top: 6px;
+    }
+
+    .main-chart {
+      height: 280px;
+      padding: 4px 0 0;
+    }
+
+    .main-chart svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .grid-line {
+      stroke: #edf1fb;
+      stroke-dasharray: 5 6;
+      stroke-width: 1;
+    }
+
+    .axis-label {
+      fill: #a4aec4;
+      font-size: 10px;
+    }
+
+    .area-path {
+      fill: url(#areaFill);
+    }
+
+    .line-path {
+      fill: none;
+      stroke: #6488ff;
+      stroke-width: 4;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .line-node {
+      fill: #fff;
+      stroke: #6488ff;
+      stroke-width: 3;
+    }
+
+    .line-glow {
+      fill: #6488ff;
+      opacity: 0.18;
+    }
+
+    .middle-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) 340px;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .bar-card,
+    .analysis-card {
+      padding: 16px 18px;
+    }
+
+    .bar-wrap {
+      height: 220px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      padding-top: 14px;
+      position: relative;
+    }
+
+    .bar-wrap::before,
+    .bar-wrap::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 1px dashed #edf1fb;
+    }
+
+    .bar-wrap::before {
+      top: 76px;
+    }
+
+    .bar-wrap::after {
+      top: 146px;
+    }
+
+    .bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .bar-top {
+      font-size: 10px;
+      color: #9da8bf;
+    }
+
+    .bar {
+      width: 100%;
+      min-width: 24px;
+      border-radius: 14px 14px 6px 6px;
+      background: linear-gradient(180deg, #a9c0ff 0%, #7ea0ff 50%, #6287ff 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.42);
+    }
+
+    .bar-label {
+      font-size: 10px;
+      color: #a1abc2;
+    }
+
+    .analysis-card {
+      background:
+        radial-gradient(circle at top right, rgba(105, 141, 255, 0.12), transparent 32%),
+        rgba(255,255,255,0.92);
+    }
+
+    .analysis-stat {
+      padding: 14px 0;
+      border-bottom: 1px solid #eef2fc;
+    }
+
+    .analysis-stat:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .analysis-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .analysis-name {
+      font-size: 12px;
+      color: #8f9ab0;
+    }
+
+    .analysis-value {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .analysis-rate {
+      font-size: 11px;
+      color: #6488ff;
+      font-weight: 700;
+    }
+
+    .progress {
+      height: 6px;
+      border-radius: 999px;
+      background: #eef3ff;
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #9bb5ff, #6287ff);
+    }
+
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 16px;
+    }
+
+    .table-card,
+    .mass-card {
+      padding: 16px 0 0;
+      overflow: hidden;
+    }
+
+    .table-card .panel-head,
+    .mass-card .panel-head {
+      padding: 0 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 12px 18px;
+      border-bottom: 1px solid #f0f3fb;
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 11px;
+      color: #95a1b8;
+      font-weight: 700;
+    }
+
+    td {
+      color: #59647a;
+    }
+
+    .table-soft {
+      color: #9ca7be;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 22px;
+      border-radius: 999px;
+      padding: 0 8px;
+      background: #ebfff2;
+      color: #2db46d;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .mass-card {
+      padding-bottom: 14px;
+    }
+
+    .mass-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 18px 0;
+      flex-wrap: wrap;
+    }
+
+    .mass-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #96a1b9;
+    }
+
+    .mass-pill {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid #e4eafb;
+      background: #fff;
+      color: #6f7990;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mass-pill.active {
+      border-color: #8eabff;
+      background: #eef4ff;
+      color: #5b7af0;
+      font-weight: 700;
+    }
+
+    .mass-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mass-btn {
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #e3e9fb;
+      background: #fff;
+      color: #647089;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .mass-btn.primary {
+      background: linear-gradient(135deg, #7f9fff, #5f7df5);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .mass-table-wrap {
+      margin: 12px 18px 0;
+      border: 1px solid #edf1fb;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .mass-table {
+      margin-top: 0;
+      font-size: 11px;
+    }
+
+    .mass-table th,
+    .mass-table td {
+      padding: 12px 10px;
+      font-size: 11px;
+    }
+
+    .mass-table th:first-child,
+    .mass-table td:first-child {
+      padding-left: 16px;
+    }
+
+    .mass-check {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #d9e2fb;
+      border-radius: 4px;
+      display: inline-block;
+      background: #fff;
+      vertical-align: middle;
+    }
+
+    .mass-danger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 52px;
+      height: 24px;
+      padding: 0 10px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ff6f8e, #ff4d73);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(255, 84, 122, 0.18);
+      cursor: pointer;
+    }
+
+    .mass-detail {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 62px;
+      height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid #dce5fb;
+      background: #f8faff;
+      color: #5f7df5;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .mass-page {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px 0;
+      color: #9ba6bd;
+      font-size: 11px;
+    }
+
+    .mass-page-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid #dbe4fb;
+      background: #fff;
+      color: #6783eb;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .stats-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .stats-modal.is-hidden {
+      display: none;
+    }
+
+    .stats-modal-mask {
+      position: absolute;
+      inset: 0;
+      background: rgba(33, 42, 67, 0.42);
+      backdrop-filter: blur(4px);
+    }
+
+    .stats-modal-panel {
+      position: relative;
+      z-index: 1;
+      width: min(1100px, calc(100vw - 48px));
+      max-height: calc(100vh - 48px);
+      padding: 22px 22px 18px;
+      overflow: hidden;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at top right, rgba(110, 141, 255, 0.14), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,0.98), rgba(251,252,255,0.98));
+    }
+
+    .stats-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .stats-modal-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #26324d;
+      letter-spacing: -0.03em;
+    }
+
+    .stats-modal-sub {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #96a1b9;
+    }
+
+    .stats-close {
+      width: 34px;
+      height: 34px;
+      border: 1px solid #e1e7fa;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.9);
+      color: #7a869f;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .stats-banner {
+      margin-bottom: 14px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background: #fff5f7;
+      border: 1px solid #ffdbe4;
+      color: #ff4f78;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stats-summary-card {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid #e8edfb;
+      background: rgba(255,255,255,0.92);
+    }
+
+    .stats-summary-label {
+      font-size: 12px;
+      color: #97a2b8;
+      margin-bottom: 8px;
+    }
+
+    .stats-summary-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: #2d3a58;
+      letter-spacing: -0.03em;
+    }
+
+    .stats-summary-value.hot {
+      color: #ff4f78;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .stats-sheet {
+      display: flex;
+      flex-direction: column;
+      min-height: 460px;
+      border: 1px solid #e8edfb;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.94);
+      overflow: hidden;
+    }
+
+    .stats-sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid #eef2fb;
+    }
+
+    .stats-sheet-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #2d3852;
+    }
+
+    .stats-sheet-count {
+      min-width: 72px;
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #5b79ee;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stats-sheet-body {
+      flex: 1;
+      overflow: auto;
+      padding: 14px 18px 18px;
+    }
+
+    .stats-number-list,
+    .stats-message-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .stats-number-item {
+      padding: 0 0 8px;
+      border-bottom: 1px dashed #edf1fb;
+      color: #2f3c59;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    .stats-message-item {
+      padding: 0 0 10px;
+      border-bottom: 1px dashed #edf1fb;
+      color: #30405e;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .stats-modal-foot {
+      display: flex;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    .stats-confirm {
+      min-width: 86px;
+      height: 38px;
+      border: 0;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #4f7bff, #3d69f0);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(76, 112, 243, 0.22);
+    }
+
+    .sms-shell {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .sms-side {
+      padding: 14px;
+    }
+
+    .sms-side-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .sms-side-title {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .sms-filter {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 10px;
+      background: #eef3ff;
+      color: #5f7df5;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .sms-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .sms-tab {
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #e2e9fb;
+      background: #fff;
+      color: #8490a8;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .sms-tab.active {
+      background: #eef3ff;
+      color: #5f7df5;
+      border-color: #d8e2ff;
+    }
+
+    .sms-search {
+      height: 38px;
+      border: 1px solid #e4eafb;
+      background: #fff;
+      border-radius: 12px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      color: #a7b1c8;
+      font-size: 11px;
+      margin-bottom: 12px;
+    }
+
+    .sms-list {
+      display: grid;
+      gap: 10px;
+      max-height: 620px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .sms-item {
+      border: 1px solid #edf1fb;
+      background: #fbfcff;
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+      position: relative;
+    }
+
+    .sms-item.active {
+      background: linear-gradient(180deg, #eef3ff, #f8fbff);
+      border-color: #dce5ff;
+      box-shadow: inset 2px 0 0 #6a8dff;
+    }
+
+    .sms-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .sms-number {
+      font-size: 12px;
+      font-weight: 700;
+      color: #34415c;
+    }
+
+    .sms-count {
+      min-width: 28px;
+      height: 20px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #6287ff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .sms-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #37c978;
+      display: inline-block;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .sms-preview {
+      font-size: 11px;
+      color: #8f9ab0;
+      line-height: 1.5;
+    }
+
+    .sms-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #a8b2c5;
+    }
+
+    .sms-main {
+      padding: 16px 18px 18px;
+    }
+
+    .sms-main-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #edf1fb;
+      margin-bottom: 14px;
+    }
+
+    .sms-main-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sms-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #dfe8ff, #edf2ff);
+      border: 1px solid #dfe7fb;
+      flex-shrink: 0;
+    }
+
+    .sms-main-title {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .sms-main-sub {
+      font-size: 11px;
+      color: #98a4bc;
+      margin-top: 4px;
+    }
+
+    .sms-main-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sms-chip {
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #e3e9fb;
+      background: #fff;
+      color: #67728a;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .sms-chip.primary {
+      background: linear-gradient(135deg, #7f9fff, #5f7df5);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .sms-board {
+      min-height: 430px;
+      border: 1px solid #edf1fb;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(250,252,255,0.96), rgba(255,255,255,0.98));
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+
+    .sms-date {
+      align-self: center;
+      font-size: 10px;
+      color: #a4aec4;
+      background: #f4f7ff;
+      border-radius: 999px;
+      padding: 6px 10px;
+    }
+
+    .sms-system {
+      align-self: center;
+      font-size: 10px;
+      color: #9aa5bc;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .sms-bubble {
+      max-width: 64%;
+      padding: 12px 14px;
+      border-radius: 16px;
+      font-size: 12px;
+      line-height: 1.7;
+      position: relative;
+    }
+
+    .sms-bubble.in {
+      align-self: flex-start;
+      background: #fff;
+      border: 1px solid #edf1fb;
+      color: #55637c;
+      border-top-left-radius: 6px;
+    }
+
+    .sms-bubble.out {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #83a5ff, #5f7df5);
+      color: #fff;
+      border-top-right-radius: 6px;
+    }
+
+    .sms-time {
+      display: block;
+      margin-top: 6px;
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    .sms-compose {
+      margin-top: 14px;
+      border-top: 1px solid #edf1fb;
+      padding-top: 14px;
+    }
+
+    .sms-tools {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+      color: #a5aec4;
+      font-size: 11px;
+      justify-content: space-between;
+    }
+
+    .sms-tools-left,
+    .sms-tools-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sms-tool {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid #dfe7fb;
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sms-input {
+      min-height: 88px;
+      border-radius: 14px;
+      border: 1px solid #e4eafb;
+      background: #fff;
+      padding: 12px 14px;
+      color: #a7b1c8;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .sms-counter {
+      font-size: 10px;
+      color: #adb6ca;
+    }
+
+    .sms-compose-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .bulk-sms-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 92;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+    }
+
+    .bulk-sms-modal.is-hidden {
+      display: none;
+    }
+
+    .bulk-sms-mask {
+      position: absolute;
+      inset: 0;
+      background: rgba(34, 40, 58, 0.44);
+      backdrop-filter: blur(2px);
+    }
+
+    .bulk-sms-panel {
+      position: relative;
+      z-index: 1;
+      width: min(1360px, calc(100vw - 44px));
+      max-height: calc(100vh - 44px);
+      overflow: auto;
+      padding: 20px;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at top right, rgba(105, 138, 255, 0.12), transparent 24%),
+        linear-gradient(180deg, #ffffff, #fbfcff);
+      box-shadow: 0 24px 56px rgba(35, 45, 77, 0.22);
+    }
+
+    .bulk-sms-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .bulk-sms-title-wrap {
+      display: grid;
+      gap: 4px;
+    }
+
+    .bulk-sms-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #25314d;
+      letter-spacing: -0.02em;
+    }
+
+    .bulk-sms-sub {
+      font-size: 12px;
+      color: #8d99b2;
+    }
+
+    .bulk-sms-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid #e2e8fb;
+      background: #fff;
+      color: #7f8aa2;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .bulk-sms-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border: 1px solid #edf1fb;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.84);
+      flex-wrap: wrap;
+    }
+
+    .bulk-sms-toolbar-left,
+    .bulk-sms-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .bulk-sms-chip {
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid #e2e9fb;
+      background: #fff;
+      color: #72809a;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bulk-sms-chip.active {
+      border-color: #d9e4ff;
+      background: #eef4ff;
+      color: #5473eb;
+    }
+
+    .bulk-sms-tip {
+      font-size: 11px;
+      color: #909bb3;
+    }
+
+    .bulk-sms-tip strong {
+      color: #ff5a7b;
+      font-weight: 700;
+    }
+
+    .bulk-sms-layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1.15fr) minmax(0, 0.95fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .bulk-sms-side,
+    .bulk-sms-main,
+    .bulk-sms-preview-panel {
+      border: 1px solid #edf1fb;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.92);
+      min-width: 0;
+    }
+
+    .bulk-sms-side {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .bulk-sms-side-block {
+      border: 1px solid #eef2fb;
+      border-radius: 14px;
+      padding: 12px;
+      background: linear-gradient(180deg, #fcfdff, #ffffff);
+    }
+
+    .bulk-sms-side-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #33405b;
+      margin-bottom: 8px;
+    }
+
+    .bulk-sms-side-copy {
+      font-size: 11px;
+      color: #95a0b7;
+      line-height: 1.7;
+    }
+
+    .bulk-sms-stat {
+      display: grid;
+      gap: 8px;
+    }
+
+    .bulk-sms-stat-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11px;
+      color: #7b869e;
+    }
+
+    .bulk-sms-stat-item strong {
+      color: #31405f;
+      font-size: 12px;
+    }
+
+    .bulk-sms-main,
+    .bulk-sms-preview-panel {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .bulk-sms-section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .bulk-sms-section-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #2e3a56;
+    }
+
+    .bulk-sms-section-sub {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #97a2b8;
+      line-height: 1.6;
+    }
+
+    .bulk-sms-label {
+      margin-bottom: 6px;
+      font-size: 11px;
+      color: #ff5a7b;
+      font-weight: 700;
+    }
+
+    .bulk-sms-textarea {
+      width: 100%;
+      min-height: 248px;
+      resize: none;
+      border: 1px solid #e4eafb;
+      border-radius: 12px;
+      padding: 14px;
+      background: #fff;
+      color: #39465f;
+      font-size: 12px;
+      line-height: 1.7;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .bulk-sms-textarea.preview {
+      min-height: 364px;
+      background: linear-gradient(180deg, #ffffff, #fcfdff);
+    }
+
+    .bulk-sms-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 140px;
+      gap: 12px;
+    }
+
+    .bulk-sms-field,
+    .bulk-sms-select {
+      height: 36px;
+      border: 1px solid #e4eafb;
+      border-radius: 10px;
+      padding: 0 10px;
+      font-size: 12px;
+      color: #667189;
+      background: #fff;
+      outline: none;
+      width: 100%;
+    }
+
+    .bulk-sms-phone-list {
+      min-height: 136px;
+      font-family: Consolas, monospace;
+    }
+
+    .bulk-sms-note {
+      margin-top: 2px;
+      font-size: 11px;
+      color: #ff5a7b;
+      line-height: 1.6;
+    }
+
+    .bulk-template-box {
+      border: 1px solid #edf1fb;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #fbfcff, #ffffff);
+      overflow: hidden;
+    }
+
+    .bulk-template-box.active {
+      border-color: #d8e2ff;
+      box-shadow: 0 10px 24px rgba(87, 119, 240, 0.08);
+    }
+
+    .bulk-template-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #f6f8fc;
+      border-bottom: 1px solid #edf1fb;
+    }
+
+    .bulk-template-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #44506a;
+    }
+
+    .bulk-template-toggle {
+      font-size: 11px;
+      color: #7d88a1;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bulk-template-toggle input {
+      accent-color: #4d77f3;
+    }
+
+    .bulk-template-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid #edf1fb;
+      background: #fff;
+    }
+
+    .bulk-template-input {
+      width: 100%;
+      height: 38px;
+      border: 1px solid #e4eafb;
+      border-radius: 10px;
+      padding: 0 12px;
+      background: #fff;
+      color: #667189;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .bulk-template-trigger {
+      width: 38px;
+      height: 38px;
+      border: 1px solid #e4eafb;
+      border-radius: 10px;
+      background: #fff;
+      color: #7a88a4;
+      font-size: 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .bulk-template-list {
+      max-height: 220px;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .bulk-template-list.is-hidden {
+      display: none;
+    }
+
+    .bulk-template-item {
+      height: 38px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #5f6b84;
+      font-size: 12px;
+      border-top: 1px solid #f3f6fd;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .bulk-template-item:first-child {
+      border-top: 0;
+    }
+
+    .bulk-template-item:hover {
+      background: #f6f9ff;
+      color: #4566df;
+    }
+
+    .bulk-template-item.active {
+      background: linear-gradient(135deg, #4f76f4, #3f68eb);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .bulk-template-item.is-hidden {
+      display: none;
+    }
+
+    .bulk-template-rate {
+      font-size: 11px;
+      opacity: 0.86;
+    }
+
+    .bulk-template-empty {
+      padding: 16px 14px;
+      color: #9aa5bc;
+      font-size: 12px;
+      background: #fff;
+      border-top: 1px solid #f3f6fd;
+    }
+
+    .bulk-template-empty.is-hidden {
+      display: none;
+    }
+
+    .bulk-sms-main-actions,
+    .bulk-sms-preview-head,
+    .bulk-sms-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .bulk-sms-preview-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #2e3a56;
+    }
+
+    .bulk-sms-preview-copy {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #98a4bc;
+    }
+
+    .bulk-sms-btn {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1px solid #dfe7fb;
+      background: #fff;
+      color: #68748c;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .bulk-sms-btn.primary {
+      border-color: transparent;
+      background: linear-gradient(135deg, #5f87ff, #4170f5);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(73, 109, 243, 0.18);
+    }
+
+    .bulk-sms-btn.ghost {
+      background: #f8faff;
+      color: #5473eb;
+    }
+
+    .booking-card {
+      padding: 16px 0 14px;
+      overflow: hidden;
+    }
+
+    .booking-card .panel-head {
+      padding: 0 18px;
+    }
+
+    .booking-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 18px 12px;
+      flex-wrap: wrap;
+    }
+
+    .booking-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: #9aa5bc;
+      font-size: 11px;
+    }
+
+    .booking-tag {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #e3e9fb;
+      background: #fff;
+      color: #7a859b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .booking-tag.active {
+      background: #eef3ff;
+      color: #5f7df5;
+      border-color: #d8e2ff;
+      font-weight: 700;
+    }
+
+    .booking-table {
+      margin-top: 0;
+    }
+
+    .booking-table th,
+    .booking-table td {
+      padding: 14px 18px;
+      font-size: 11px;
+    }
+
+    .booking-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 46px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #5f7df5;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .float-chat {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: 152px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(233, 238, 251, 0.95);
+      box-shadow: 0 18px 34px rgba(71, 95, 165, 0.16);
+      backdrop-filter: blur(10px);
+    }
+
+    .float-chat-head {
+      padding: 9px 12px;
+      border-bottom: 1px solid #eef2fc;
+      font-size: 10px;
+      color: #8f9ab0;
+      background: #f9fbff;
+    }
+
+    .float-chat-body {
+      padding: 12px;
+      font-size: 11px;
+      color: #6c768c;
+      line-height: 1.6;
+    }
+
+    .float-chat-btn {
+      margin-top: 8px;
+      width: 100%;
+      height: 30px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #81a4ff, #6287ff);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media (max-width: 1200px) {
+      .hero-grid,
+      .middle-grid,
+      .bottom-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sms-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-sheet {
+        min-height: 320px;
+      }
+
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .trend-meta {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media (max-width: 640px) {
+      .main {
+        padding: 8px;
+      }
+
+      .page-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .topbar {
+        height: auto;
+        padding: 12px;
+        align-items: flex-start;
+        gap: 8px;
+        flex-direction: column;
+      }
+
+      .top-actions {
+      }
+
+      .account-drawer {
+        position: static;
+        transform: none;
+        width: 100%;
+        margin-top: 8px;
+        bottom: auto;
+      }
+
+      .stats-modal {
+        padding: 10px;
+      }
+
+      .stats-modal-panel {
+        width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
+        padding: 16px 14px 14px;
+      }
+
+      .stats-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-modal-title {
+        font-size: 22px;
+      }
+
+      .bulk-sms-modal {
+        padding: 10px;
+      }
+
+      .bulk-sms-panel {
+        width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
+        padding: 12px;
+      }
+
+      .bulk-sms-layout,
+      .bulk-sms-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <span>众达工作台</span>
+      </div>
+      <div class="nav">
+        <button class="nav-item" type="button" data-target="home">首页</button>
+        <button class="nav-item active" type="button" data-target="mass">群发统计</button>
+        <button class="nav-item" type="button" data-target="sms">SMS Chat</button>
+        <button class="nav-item" type="button" data-target="booking">预约发送</button>
+        <button class="nav-item" type="button" data-target="report">运营报表</button>
+        <button class="nav-item" type="button" data-target="message">消息中心</button>
+        <button class="nav-item" type="button" data-target="template">发送模板</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="shell">
+        <div class="topbar">
+          <div class="topbar-title">Dashboard / Workbench</div>
+          <div class="top-actions">
+            <button class="account-entry" type="button" id="accountToggle">
+              <span class="account-avatar-mini">张</span>
+              <span>欢迎你，张三，员工</span>
+            </button>
+            <span class="top-dot"></span>
+            <span class="top-dot"></span>
+            <span class="top-dot"></span>
+
+            <div class="account-drawer is-hidden" id="accountDrawer">
+              <div class="account-headline">
+                <div>
+                  剩余条数:0<br>
+                  过期时间:<br>
+                  2026-04-29 00:03:38
+                </div>
+                <span class="account-fold">^</span>
+              </div>
+
+              <div class="account-card">
+                <div class="account-user">
+                  <div class="account-avatar"></div>
+                  <div>
+                    <div class="account-name">xia1</div>
+                  </div>
+                </div>
+
+                <div class="account-meta">
+                  剩余条数:0<br>
+                  过期时间:2026-04-29 00:03:38
+                </div>
+
+                <div class="account-toggle">
+                  <span>消息提醒</span>
+                  <span class="switch"></span>
+                </div>
+
+                <div class="account-actions">
+                  <div class="account-action"><span class="account-icon">L</span><span>修改登录密码</span></div>
+                  <div class="account-action"><span class="account-icon">G</span><span>谷歌验证器绑定</span></div>
+                  <div class="account-action"><span class="account-icon">O</span><span>退出登录</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="view-panel is-hidden" data-view="home">
+            <div class="page-head">
+              <div>
+                <div class="page-title">首页</div>
+                <div class="page-sub">点击左侧菜单可在首页总览和群发模块之间切换查看内容</div>
+              </div>
+              <div class="page-filter">
+                <button class="ghost-btn">最近 7 天</button>
+                <button class="ghost-btn">导出报表</button>
+              </div>
+            </div>
+
+            <section class="hero-grid">
+              <div class="panel overview-card">
+                <div class="overview-top">
+                  <div>
+                    <div class="overview-title">经营概览</div>
+                    <div class="overview-desc">核心指标集中展示，首屏更聚焦</div>
+                  </div>
+                  <div class="overview-badge">实时</div>
+                </div>
+
+                <div class="summary-total">
+                  <div class="summary-total-label">总激活数</div>
+                  <div class="summary-total-value">0</div>
+                  <div class="summary-total-sub">今日总览数据 · 已同步到 23:59</div>
+                </div>
+
+                <div class="kpi-list">
+                  <div class="kpi-item">
+                    <div>
+                      <div class="kpi-label">订单总量</div>
+                      <div class="kpi-value">0</div>
+                      <div class="kpi-note">累计数据</div>
+                    </div>
+                    <div class="kpi-trend">+0.0%</div>
+                  </div>
+                  <div class="kpi-item">
+                    <div>
+                      <div class="kpi-label">昨日成交率</div>
+                      <div class="kpi-value">0.00%</div>
+                      <div class="kpi-note">按昨日订单计算</div>
+                    </div>
+                    <div class="kpi-trend">+0.0%</div>
+                  </div>
+                  <div class="kpi-item">
+                    <div>
+                      <div class="kpi-label">昨日转化率</div>
+                      <div class="kpi-value">0.00%</div>
+                      <div class="kpi-note">按昨日线索计算</div>
+                    </div>
+                    <div class="kpi-trend">+0.0%</div>
+                  </div>
+                  <div class="kpi-item">
+                    <div>
+                      <div class="kpi-label">待处理工单</div>
+                      <div class="kpi-value">12</div>
+                      <div class="kpi-note">较昨日持平</div>
+                    </div>
+                    <div class="kpi-trend">12 条</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel trend-card">
+                <div class="panel-head">
+                  <div>
+                    <div class="panel-title">14 天内订单走势</div>
+                    <div class="panel-sub">首页保持大盘结构，和群发模块分开展示</div>
+                  </div>
+                  <div class="panel-link">查看详情</div>
+                </div>
+
+                <div class="trend-meta">
+                  <div class="trend-meta-card">
+                    <div class="trend-meta-label">峰值日期</div>
+                    <div class="trend-meta-value">07-18</div>
+                    <div class="trend-meta-note">波峰明显，适合重点标注</div>
+                  </div>
+                  <div class="trend-meta-card">
+                    <div class="trend-meta-label">近 14 天订单</div>
+                    <div class="trend-meta-value">1,284</div>
+                    <div class="trend-meta-note">与上周期基本持平</div>
+                  </div>
+                  <div class="trend-meta-card">
+                    <div class="trend-meta-label">平均转化率</div>
+                    <div class="trend-meta-value">23.6%</div>
+                    <div class="trend-meta-note">建议配合活动节奏观察</div>
+                  </div>
+                </div>
+
+                <div class="main-chart">
+                  <svg viewBox="0 0 900 320" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#86a8ff" stop-opacity="0.3"></stop>
+                        <stop offset="100%" stop-color="#86a8ff" stop-opacity="0.02"></stop>
+                      </linearGradient>
+                    </defs>
+                    <line class="grid-line" x1="24" y1="60" x2="876" y2="60"></line>
+                    <line class="grid-line" x1="24" y1="132" x2="876" y2="132"></line>
+                    <line class="grid-line" x1="24" y1="204" x2="876" y2="204"></line>
+                    <line class="grid-line" x1="24" y1="276" x2="876" y2="276"></line>
+
+                    <path class="area-path" d="M36 206 C92 142, 148 138, 206 182 S328 214, 388 166 S504 96, 570 126 S676 226, 742 198 S820 168, 864 190 L864 290 L36 290 Z"></path>
+                    <path class="line-path" d="M36 206 C92 142, 148 138, 206 182 S328 214, 388 166 S504 96, 570 126 S676 226, 742 198 S820 168, 864 190"></path>
+
+                    <circle class="line-glow" cx="388" cy="166" r="14"></circle>
+                    <circle class="line-node" cx="388" cy="166" r="7"></circle>
+                    <circle class="line-glow" cx="742" cy="198" r="14"></circle>
+                    <circle class="line-node" cx="742" cy="198" r="7"></circle>
+
+                    <text class="axis-label" x="36" y="308">07-05</text>
+                    <text class="axis-label" x="158" y="308">07-07</text>
+                    <text class="axis-label" x="280" y="308">07-09</text>
+                    <text class="axis-label" x="402" y="308">07-11</text>
+                    <text class="axis-label" x="524" y="308">07-13</text>
+                    <text class="axis-label" x="646" y="308">07-15</text>
+                    <text class="axis-label" x="768" y="308">07-17</text>
+                    <text class="axis-label" x="844" y="308">07-18</text>
+                  </svg>
+                </div>
+              </div>
+            </section>
+
+            <section class="middle-grid">
+              <div class="panel bar-card">
+                <div class="panel-head">
+                  <div>
+                    <div class="panel-title">最近 9 天订单数据统计图</div>
+                    <div class="panel-sub">第二排改为辅助图表区，承接首屏趋势</div>
+                  </div>
+                  <div class="panel-link">9 日</div>
+                </div>
+
+                <div class="bar-wrap">
+                  <div class="bar-item"><div class="bar-top">8</div><div class="bar" style="height: 96px;"></div><div class="bar-label">1</div></div>
+                  <div class="bar-item"><div class="bar-top">5</div><div class="bar" style="height: 64px;"></div><div class="bar-label">2</div></div>
+                  <div class="bar-item"><div class="bar-top">9</div><div class="bar" style="height: 112px;"></div><div class="bar-label">3</div></div>
+                  <div class="bar-item"><div class="bar-top">6</div><div class="bar" style="height: 76px;"></div><div class="bar-label">4</div></div>
+                  <div class="bar-item"><div class="bar-top">12</div><div class="bar" style="height: 138px;"></div><div class="bar-label">5</div></div>
+                  <div class="bar-item"><div class="bar-top">7</div><div class="bar" style="height: 88px;"></div><div class="bar-label">6</div></div>
+                  <div class="bar-item"><div class="bar-top">11</div><div class="bar" style="height: 126px;"></div><div class="bar-label">7</div></div>
+                  <div class="bar-item"><div class="bar-top">6</div><div class="bar" style="height: 80px;"></div><div class="bar-label">8</div></div>
+                  <div class="bar-item"><div class="bar-top">10</div><div class="bar" style="height: 118px;"></div><div class="bar-label">9</div></div>
+                </div>
+              </div>
+
+              <div class="panel analysis-card">
+                <div class="panel-head">
+                  <div>
+                    <div class="panel-title">今日分析概览</div>
+                    <div class="panel-sub">右侧改成更像摘要面板的垂直节奏</div>
+                  </div>
+                </div>
+
+                <div class="analysis-stat">
+                  <div class="analysis-row">
+                    <div>
+                      <div class="analysis-name">激活完成</div>
+                      <div class="analysis-value">0</div>
+                    </div>
+                    <div class="analysis-rate">25%</div>
+                  </div>
+                  <div class="progress"><span style="width: 25%;"></span></div>
+                </div>
+
+                <div class="analysis-stat">
+                  <div class="analysis-row">
+                    <div>
+                      <div class="analysis-name">订单转化</div>
+                      <div class="analysis-value">0</div>
+                    </div>
+                    <div class="analysis-rate">18%</div>
+                  </div>
+                  <div class="progress"><span style="width: 18%;"></span></div>
+                </div>
+
+                <div class="analysis-stat">
+                  <div class="analysis-row">
+                    <div>
+                      <div class="analysis-name">成交率</div>
+                      <div class="analysis-value">0.00%</div>
+                    </div>
+                    <div class="analysis-rate">36%</div>
+                  </div>
+                  <div class="progress"><span style="width: 36%;"></span></div>
+                </div>
+
+                <div class="analysis-stat">
+                  <div class="analysis-row">
+                    <div>
+                      <div class="analysis-name">线索转化率</div>
+                      <div class="analysis-value">0.00%</div>
+                    </div>
+                    <div class="analysis-rate">42%</div>
+                  </div>
+                  <div class="progress"><span style="width: 42%;"></span></div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="view-panel" data-view="mass">
+          <div class="page-head">
+            <div>
+              <div class="page-title">群发统计</div>
+              <div class="page-sub">内容参考图二，改成更轻量的统计记录列表页</div>
+            </div>
+            <div class="page-filter">
+              <button class="ghost-btn">统计筛选</button>
+              <button class="ghost-btn">导出</button>
+            </div>
+          </div>
+
+          <section class="panel table-card">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">统计记录</div>
+                  <div class="panel-sub">按时间区间查看群发任务的发送、转化和成本情况</div>
+                </div>
+                <div class="panel-link">刷新</div>
+              </div>
+
+              <div class="mass-toolbar" style="padding-top: 0;">
+                <div class="mass-range">
+                  <span>4-13 00:00 - 4-15 23:59</span>
+                  <span class="mass-pill">2024年7月节</span>
+                  <span class="mass-pill active">筛选</span>
+                  <span class="mass-pill">批量设置为已读发出</span>
+                </div>
+                <div class="mass-actions">
+                  <button class="mass-btn primary">统计</button>
+                </div>
+              </div>
+
+              <table class="mass-table">
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>发送数量</th>
+                    <th>回复量</th>
+                    <th>加V量</th>
+                    <th>已激活量</th>
+                    <th>总成本</th>
+                    <th>激活成本</th>
+                    <th>签单量</th>
+                    <th>成单额</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>2025-04-14 07:53</td>
+                    <td>0</td>
+                    <td>10</td>
+                    <td>13</td>
+                    <td>118(10)</td>
+                    <td>1</td>
+                    <td>42.0099</td>
+                    <td>2</td>
+                    <td>4.20%</td>
+                    <td>2025-04-14 07:53:09</td>
+                    <td><button class="mass-danger stats-trigger" type="button">去统计</button></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="mass-page">
+                <span>上一页</span>
+                <span class="mass-page-dot">1</span>
+                <span>下一页</span>
+              </div>
+          </section>
+
+          </div>
+
+          <div class="view-panel is-hidden" data-view="sms">
+            <div class="page-head">
+              <div>
+                <div class="page-title">SMS Chat</div>
+                <div class="page-sub">这里放的是你第二张图里的短信聊天内容，继续沿用当前首页的蓝白风格</div>
+              </div>
+              <div class="page-filter">
+                <button class="ghost-btn bulk-sms-trigger" type="button">群发短信</button>
+                <button class="ghost-btn">消息模板</button>
+                <button class="ghost-btn">开始会话</button>
+              </div>
+            </div>
+
+            <section class="sms-shell">
+              <div class="panel sms-side">
+                <div class="sms-side-top">
+                  <div class="sms-side-title">短信会话</div>
+                  <div class="sms-filter">全部</div>
+                </div>
+                <div class="sms-tabs">
+                  <span class="sms-tab active">全部</span>
+                  <span class="sms-tab">未读</span>
+                  <span class="sms-tab">已标记</span>
+                </div>
+                <div class="sms-search">搜索手机号 / 内容</div>
+
+                <div class="sms-list">
+                  <div class="sms-item active">
+                    <div class="sms-item-top">
+                      <span class="sms-number">16878591723</span>
+                      <span class="sms-count">99</span>
+                    </div>
+                    <div class="sms-preview">您好，您收到的验证码是 6842，请在 5 分钟内完成验证。</div>
+                    <div class="sms-meta"><span>刚刚</span><span><i class="sms-status-dot"></i>在线</span></div>
+                  </div>
+
+                  <div class="sms-item">
+                    <div class="sms-item-top">
+                      <span class="sms-number">16818487134</span>
+                      <span class="sms-count">44</span>
+                    </div>
+                    <div class="sms-preview">活动提醒已发送，如需更多服务请回复 1 获取详情。</div>
+                    <div class="sms-meta"><span>2 分钟前</span><span>活跃</span></div>
+                  </div>
+
+                  <div class="sms-item">
+                    <div class="sms-item-top">
+                      <span class="sms-number">17022284572</span>
+                      <span class="sms-count">257</span>
+                    </div>
+                    <div class="sms-preview">当前线路繁忙，稍后将继续推送消息，请耐心等待。</div>
+                    <div class="sms-meta"><span>10 分钟前</span><span>处理中</span></div>
+                  </div>
+
+                  <div class="sms-item">
+                    <div class="sms-item-top">
+                      <span class="sms-number">15618080714</span>
+                      <span class="sms-count">16</span>
+                    </div>
+                    <div class="sms-preview">营销活动已结束，感谢您的参与，欢迎下次继续关注。</div>
+                    <div class="sms-meta"><span>1 小时前</span><span>归档</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel sms-main">
+                <div class="sms-main-head">
+                  <div class="sms-main-left">
+                    <div class="sms-avatar"></div>
+                    <div>
+                      <div class="sms-main-title">16878591723</div>
+                      <div class="sms-main-sub">今天 · 关联账号 1 · 当前会话在线</div>
+                    </div>
+                  </div>
+                  <div class="sms-main-actions">
+                    <span class="sms-chip">标记已读</span>
+                    <span class="sms-chip">转人工</span>
+                    <span class="sms-chip primary">开始会话</span>
+                  </div>
+                </div>
+
+                <div class="sms-board">
+                  <div class="sms-date">2025-04-13 18:30</div>
+                  <div class="sms-system">系统已接入当前会话，可直接发送短信或使用模板快捷回复。</div>
+                  <div class="sms-bubble in">
+                    您好，我刚刚收到短信提醒，想确认一下这条消息是否来自官方渠道？
+                    <span class="sms-time">18:32</span>
+                  </div>
+                  <div class="sms-bubble out">
+                    您好，这里是官方短信通道。您本次收到的是系统验证码通知，可放心使用。
+                    <span class="sms-time">18:33</span>
+                  </div>
+                  <div class="sms-bubble in">
+                    明白了，谢谢。我想再了解一下活动详情和后续推送频率。
+                    <span class="sms-time">18:34</span>
+                  </div>
+                  <div class="sms-bubble out">
+                    可以的，后续消息将按您当前订阅频率发送，如需关闭提醒可直接回复 TD。
+                    <span class="sms-time">18:35</span>
+                  </div>
+                </div>
+
+                <div class="sms-compose">
+                  <div class="sms-tools">
+                    <div class="sms-tools-left">
+                      <span class="sms-tool">+</span>
+                      <span class="sms-tool">T</span>
+                      <span class="sms-tool">@</span>
+                      <span>支持快捷回复 / 模板插入</span>
+                    </div>
+                    <div class="sms-tools-right">
+                      <span class="sms-counter">0 / 500</span>
+                    </div>
+                  </div>
+                  <div class="sms-input">Type a message</div>
+                  <div class="sms-compose-foot">
+                    <span class="sms-chip">清空内容</span>
+                    <span class="sms-chip primary">发送消息</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="view-panel is-hidden" data-view="booking">
+            <div class="page-head">
+              <div>
+                <div class="page-title">预约发送</div>
+                <div class="page-sub">内容按你图二的结构做成了一个预约发送列表页，风格继续沿用当前首页</div>
+              </div>
+              <div class="page-filter">
+                <button class="ghost-btn">筛选</button>
+                <button class="ghost-btn">新增预约</button>
+              </div>
+            </div>
+
+            <section class="panel booking-card">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">定时发送记录</div>
+                  <div class="panel-sub">展示预约发送任务的核心字段与执行状态</div>
+                </div>
+                <div class="panel-link">刷新</div>
+              </div>
+
+              <div class="booking-toolbar">
+                <div class="booking-left">
+                  <span class="booking-tag active">状态</span>
+                  <span class="booking-tag">发送账号</span>
+                  <span class="booking-tag">预约时间</span>
+                  <span class="booking-tag">执行结果</span>
+                </div>
+                <div class="mass-actions">
+                  <button class="mass-btn">导出</button>
+                  <button class="mass-btn primary">新建预约</button>
+                </div>
+              </div>
+
+              <table class="booking-table">
+                <thead>
+                  <tr>
+                    <th>预约任务</th>
+                    <th>发送总量</th>
+                    <th>模板类型</th>
+                    <th>发送账号</th>
+                    <th>执行时间</th>
+                    <th>预计完成时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>7月促活通知</td>
+                    <td>79</td>
+                    <td>SMS</td>
+                    <td>admin</td>
+                    <td>07-23 14:45</td>
+                    <td>2025-04-14 09:17:00</td>
+                    <td><span class="booking-status">待发送</span></td>
+                    <td><span class="mass-detail">查看详情</span></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="mass-page">
+                <span>上一页</span>
+                <span class="mass-page-dot">1</span>
+                <span>下一页</span>
+              </div>
+            </section>
+          </div>
+
+          <div class="view-panel is-hidden" data-view="report">
+            <div class="page-head">
+              <div>
+                <div class="page-title">运营报表</div>
+                <div class="page-sub">内容参考你提供的图片，做成轻量化的报表列表页面</div>
+              </div>
+              <div class="page-filter">
+                <button class="ghost-btn">日期筛选</button>
+                <button class="ghost-btn">导出报表</button>
+              </div>
+            </div>
+
+            <section class="panel booking-card">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">报表汇总</div>
+                  <div class="panel-sub">按日期展示账号、发送、回复与转化等核心指标</div>
+                </div>
+                <div class="panel-link">刷新</div>
+              </div>
+
+              <div class="booking-toolbar">
+                <div class="booking-left">
+                  <span class="booking-tag active">统计</span>
+                  <span class="booking-tag">近 7 天</span>
+                  <span class="booking-tag">近 30 天</span>
+                </div>
+                <div class="mass-actions">
+                  <button class="mass-btn">重置</button>
+                  <button class="mass-btn primary">导出</button>
+                </div>
+              </div>
+
+              <table class="booking-table">
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>已发送账号数</th>
+                    <th>短信发送量</th>
+                    <th>回复量</th>
+                    <th>已加微信数</th>
+                    <th>已激活数</th>
+                    <th>总成本</th>
+                    <th>转化率</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>2025-04-13</td>
+                    <td>12</td>
+                    <td>64</td>
+                    <td>7</td>
+                    <td>6</td>
+                    <td>35</td>
+                    <td>3</td>
+                    <td>4.69%</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="mass-page">
+                <span>上一页</span>
+                <span class="mass-page-dot">1</span>
+                <span>下一页</span>
+              </div>
+            </section>
+          </div>
+
+          <div class="view-panel is-hidden" data-view="message">
+            <div class="page-head">
+              <div>
+                <div class="page-title">消息中心</div>
+                <div class="page-sub">内容参考图一，调整为更像通知列表的长表格页面</div>
+              </div>
+              <div class="page-filter">
+                <button class="ghost-btn">消息类型</button>
+                <button class="ghost-btn">刷新消息</button>
+              </div>
+            </div>
+
+            <section class="panel booking-card">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">消息列表</div>
+                  <div class="panel-sub">按标题、时间和内容预览查看通知消息，排版参考图一</div>
+                </div>
+                <div class="panel-link">共 12 条</div>
+              </div>
+
+              <div class="booking-toolbar">
+                <div class="booking-left">
+                  <span>4-13 00:00 - 4-13 23:59</span>
+                  <span class="booking-tag">系统通知</span>
+                  <span class="booking-tag">已发送</span>
+                  <span class="booking-tag active">全部列表</span>
+                </div>
+                <div class="mass-actions">
+                  <button class="mass-btn primary">筛选</button>
+                </div>
+              </div>
+
+              <table class="booking-table">
+                <thead>
+                  <tr>
+                    <th>消息标题</th>
+                    <th>创建时间</th>
+                    <th>更新时间</th>
+                    <th>发送通道</th>
+                    <th>内容预览</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>欢迎使用平台通知</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>站内信</td>
+                    <td>Welcome to our platform, please complete your profile and verify your account information.</td>
+                    <td><span class="booking-status">已发送</span></td>
+                  </tr>
+                  <tr>
+                    <td>安全提醒通知</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>站内信</td>
+                    <td>We detected login from a new device, please review account activity if this wasn't you.</td>
+                    <td><span class="booking-status">已发送</span></td>
+                  </tr>
+                  <tr>
+                    <td>充值到账提醒</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>短信</td>
+                    <td>Your deposit has been credited successfully and is now available in your wallet balance.</td>
+                    <td><span class="booking-status">已发送</span></td>
+                  </tr>
+                  <tr>
+                    <td>活动奖励发放通知</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>站内信</td>
+                    <td>We sent your reward to the activity wallet, please check details in the rewards center.</td>
+                    <td><span class="booking-status">已发送</span></td>
+                  </tr>
+                  <tr>
+                    <td>系统维护公告</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>站内信</td>
+                    <td>We will perform service maintenance tonight. Some functions may be temporarily unavailable.</td>
+                    <td><span class="booking-status">已发送</span></td>
+                  </tr>
+                  <tr>
+                    <td>消息中心测试消息</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>2025-04-13 09:15:28</td>
+                    <td>短信</td>
+                    <td>We completed a message center test push. Please confirm whether the notification is readable.</td>
+                    <td><span class="booking-status">已发送</span></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="mass-page">
+                <span>上一页</span>
+                <span class="mass-page-dot">1</span>
+                <span>下一页</span>
+              </div>
+            </section>
+          </div>
+
+          <div class="view-panel is-hidden" data-view="template">
+            <div class="page-head">
+              <div>
+                <div class="page-title">发送模板</div>
+                <div class="page-sub">内容参考图二，改成简洁的模板清单页面</div>
+              </div>
+              <div class="page-filter">
+                <button class="ghost-btn">筛选</button>
+                <button class="ghost-btn">新增</button>
+              </div>
+            </div>
+
+            <section class="panel booking-card">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">模板列表</div>
+                  <div class="panel-sub">按名称查看发送模板及使用次数，整体排版向图二靠拢</div>
+                </div>
+                <div class="panel-link">共 15 条</div>
+              </div>
+
+              <div class="booking-toolbar">
+                <div class="booking-left">
+                  <span class="booking-tag active">全部</span>
+                  <span class="booking-tag">短信</span>
+                  <span class="booking-tag">系统</span>
+                </div>
+                <div class="mass-actions">
+                  <button class="mass-btn primary">添加</button>
+                </div>
+              </div>
+
+              <table class="booking-table">
+                <thead>
+                  <tr>
+                    <th>模板名称</th>
+                    <th>使用次数</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>bcvcc</td>
+                    <td>4737</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>5-1节日-2024</td>
+                    <td>3485</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>卡T10-成功2</td>
+                    <td>1762</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>7-14节日-2</td>
+                    <td>856</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>5-13节日-SM-1</td>
+                    <td>268</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>月推-预约提醒</td>
+                    <td>491</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>4-14节日-通知</td>
+                    <td>441</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>AVX-19活动-2</td>
+                    <td>184</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>9-9-专题-1</td>
+                    <td>212</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>7-1节日-短信通道</td>
+                    <td>148</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>11-10-活动提醒</td>
+                    <td>96</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>A/B测试-邀约卡片</td>
+                    <td>279</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>节日-召回短信</td>
+                    <td>119</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>H5-活动通知</td>
+                    <td>431</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                  <tr>
+                    <td>预热-引流文案</td>
+                    <td>197</td>
+                    <td><span class="booking-status">启用</span></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="mass-page">
+                <span>上一页</span>
+                <span class="mass-page-dot">1</span>
+                <span>下一页</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="stats-modal is-hidden" id="statsModal">
+    <div class="stats-modal-mask" data-close-stats></div>
+    <div class="stats-modal-panel panel" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
+      <div class="stats-modal-head">
+        <div>
+          <div class="stats-modal-title" id="statsModalTitle">发送结果</div>
+          <div class="stats-modal-sub">点击统计按钮后，集中查看号码结果和消息内容，两侧列表独立滚动。</div>
+        </div>
+        <button class="stats-close" type="button" data-close-stats aria-label="关闭">×</button>
+      </div>
+
+      <div class="stats-banner">
+        *请自行复制错误号码用于重新发送或检测（可直接复制号码到群发框中重新发送）
+      </div>
+
+      <div class="stats-summary">
+        <div class="stats-summary-card">
+          <div class="stats-summary-label">发送成功</div>
+          <div class="stats-summary-value hot">50/50 条</div>
+        </div>
+        <div class="stats-summary-card">
+          <div class="stats-summary-label">提交的号码</div>
+          <div class="stats-summary-value">50 条</div>
+        </div>
+        <div class="stats-summary-card">
+          <div class="stats-summary-label">提交的消息</div>
+          <div class="stats-summary-value">48 条</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <section class="stats-sheet">
+          <div class="stats-sheet-head">
+            <div class="stats-sheet-title">提交的号码</div>
+            <span class="stats-sheet-count">50 条</span>
+          </div>
+          <div class="stats-sheet-body">
+            <div class="stats-number-list">
+              <div class="stats-number-item">16787637123</div>
+              <div class="stats-number-item">16155821123</div>
+              <div class="stats-number-item">17022368123</div>
+              <div class="stats-number-item">16158300123</div>
+              <div class="stats-number-item">16156913123</div>
+              <div class="stats-number-item">16159775123</div>
+              <div class="stats-number-item">16154249123</div>
+              <div class="stats-number-item">19313343123</div>
+              <div class="stats-number-item">18656619123</div>
+              <div class="stats-number-item">16154279123</div>
+              <div class="stats-number-item">17812488123</div>
+              <div class="stats-number-item">16153098123</div>
+              <div class="stats-number-item">16788985123</div>
+              <div class="stats-number-item">16154239123</div>
+              <div class="stats-number-item">17074109123</div>
+              <div class="stats-number-item">15044087123</div>
+              <div class="stats-number-item">16159025123</div>
+              <div class="stats-number-item">16155968123</div>
+              <div class="stats-number-item">16626037123</div>
+              <div class="stats-number-item">18593915123</div>
+              <div class="stats-number-item">16155845123</div>
+              <div class="stats-number-item">14232403123</div>
+              <div class="stats-number-item">14237732123</div>
+              <div class="stats-number-item">16154839123</div>
+              <div class="stats-number-item">17408232123</div>
+              <div class="stats-number-item">15134038123</div>
+              <div class="stats-number-item">16155002123</div>
+              <div class="stats-number-item">16157051123</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stats-sheet">
+          <div class="stats-sheet-head">
+            <div class="stats-sheet-title">提交的消息</div>
+            <span class="stats-sheet-count">48 条</span>
+          </div>
+          <div class="stats-sheet-body">
+            <div class="stats-message-list">
+              <div class="stats-message-item">Why do my calls always fail to connect with you? Did you block me?</div>
+              <div class="stats-message-item">What causes your number to be unreachable whenever I call? Did you block me?</div>
+              <div class="stats-message-item">What is preventing my calls from getting to you? Did you block me?</div>
+              <div class="stats-message-item">Why do I get no connection with your phone anymore? Did you block me?</div>
+              <div class="stats-message-item">Why do I never get a proper connection to your number? Did you block me?</div>
+              <div class="stats-message-item">Why does your mobile always seem unavailable when I call? Did you block me?</div>
+              <div class="stats-message-item">Why is your cell unreachable every single time? Did you block me?</div>
+              <div class="stats-message-item">Why does your phone never pick up anything I dial? Did you block me?</div>
+              <div class="stats-message-item">What is the reason your phone never answers my calls? Did you block me?</div>
+              <div class="stats-message-item">Why does your cell never show available when I attempt to call? Did you block me?</div>
+              <div class="stats-message-item">How come your phone appears out of service when I try calling? Did you block me?</div>
+              <div class="stats-message-item">How come your phone always appears powered off to me? Did you block me?</div>
+              <div class="stats-message-item">What makes it so hard to get a connection to your phone? Did you block me?</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="stats-modal-foot">
+        <button class="stats-confirm" type="button" data-close-stats>OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bulk-sms-modal is-hidden" id="bulkSmsModal">
+    <div class="bulk-sms-mask" data-close-bulk-sms></div>
+    <div class="bulk-sms-panel" role="dialog" aria-modal="true" aria-labelledby="bulkSmsTitle">
+      <div class="bulk-sms-head">
+        <div class="bulk-sms-title-wrap">
+          <div class="bulk-sms-title" id="bulkSmsTitle">群发短信</div>
+          <div class="bulk-sms-sub">把配置、号码、短信内容和预览拆开，整体阅读会更清楚。</div>
+        </div>
+        <button class="bulk-sms-close" type="button" data-close-bulk-sms aria-label="关闭">×</button>
+      </div>
+
+      <div class="bulk-sms-toolbar">
+        <div class="bulk-sms-toolbar-left">
+          <span class="bulk-sms-chip active">号码请一行一个</span>
+          <span class="bulk-sms-chip">支持文本变量</span>
+          <span class="bulk-sms-chip">模板替换</span>
+        </div>
+        <div class="bulk-sms-toolbar-right">
+          <span class="bulk-sms-tip"><strong>发送前请先检查文案和预览结果</strong></span>
+        </div>
+      </div>
+
+      <div class="bulk-sms-layout">
+        <aside class="bulk-sms-side">
+          <div class="bulk-sms-side-block">
+            <div class="bulk-sms-side-title">发送配置</div>
+            <div class="bulk-sms-stat">
+              <div class="bulk-sms-stat-item"><span>发送账号</span><strong>账号1</strong></div>
+              <div class="bulk-sms-stat-item"><span>短信条数</span><strong>48 条</strong></div>
+              <div class="bulk-sms-stat-item"><span>号码数量</span><strong>50 个</strong></div>
+            </div>
+          </div>
+
+          <div class="bulk-sms-side-block">
+            <div class="bulk-sms-side-title">号码列表</div>
+            <div class="bulk-sms-label">手机号</div>
+            <textarea class="bulk-sms-textarea bulk-sms-phone-list" spellcheck="false">16787637123
+16155821123
+17022368123
+16158300123
+16156913123
+16159775123
+16154249123
+19313343123
+18656619123
+16154279123</textarea>
+            <div class="bulk-sms-note">支持批量粘贴，系统会按一行一个号码自动识别。</div>
+          </div>
+        </aside>
+
+        <section class="bulk-sms-main">
+          <div class="bulk-sms-section-head">
+            <div>
+              <div class="bulk-sms-section-title">短信内容编辑</div>
+              <div class="bulk-sms-section-sub">中间区域专注于输入正文和选择账号，减少来回切换。</div>
+            </div>
+            <button class="bulk-sms-btn ghost" type="button">插入模板</button>
+          </div>
+
+          <div class="bulk-sms-label">短信正文</div>
+          <textarea class="bulk-sms-textarea" id="bulkSmsEditor" spellcheck="false">Just here? I’ll be in North Carolina for a while in April, maybe we can meet up.
+Hope you can hang a good week! I’ll be in North Carolina this April, and it would be nice to meet if timing’s okay.
+Just a quick reminder: I’m heading to North Carolina in April and would love to catch up if you’d like.
+I’m planning to be there in North Carolina this April; maybe we could meet if you’re around.
+Just a friendly note: I’ll be in North Carolina in April and would be happy to meet if you’re free.</textarea>
+
+          <div class="bulk-template-box active" id="bulkTemplateBox">
+            <div class="bulk-template-head">
+              <div class="bulk-template-title">请选择短信模板</div>
+              <label class="bulk-template-toggle">
+                <input type="checkbox" checked id="bulkSplitCharge" />
+                超过字符允许最大字符按多条收费
+              </label>
+            </div>
+            <div class="bulk-template-search">
+              <input class="bulk-template-input" id="bulkTemplateInput" type="text" value="话术-13%回复率" placeholder="搜索或选择短信模板" />
+              <button class="bulk-template-trigger" id="bulkTemplateTrigger" type="button" aria-label="展开模板列表">▼</button>
+            </div>
+            <div class="bulk-template-list" id="bulkTemplateList">
+              <div class="bulk-template-item" data-template-name="BBB3-15%回复率" data-template-content="Hello, I will be in North Carolina in April. If your schedule works, we can meet and talk in person." data-template-preview="Hello, I will be in North Carolina in April. If your schedule works, we can meet and talk in person.">
+                <span>BBB3-15%回复率</span>
+                <span class="bulk-template-rate">15%</span>
+              </div>
+              <div class="bulk-template-item" data-template-name="BBB5-15%回复率" data-template-content="Hope you are doing well. I am heading to North Carolina in April and would be happy to catch up when you are free." data-template-preview="Hope you are doing well. I am heading to North Carolina in April and would be happy to catch up when you are free.">
+                <span>BBB5-15%回复率</span>
+                <span class="bulk-template-rate">15%</span>
+              </div>
+              <div class="bulk-template-item active" data-template-name="话术-13%回复率" data-template-content="Just here? I’ll be in North Carolina for a while in April, maybe we can meet up.&#10;Hope you can hang a good week! I’ll be in North Carolina this April, and it would be nice to meet if timing’s okay.&#10;Just a quick reminder: I’m heading to North Carolina in April and would love to catch up if you’d like.&#10;I’m planning to be there in North Carolina this April; maybe we could meet if you’re around.&#10;Just a friendly note: I’ll be in North Carolina in April and would be happy to meet if you’re free." data-template-preview="Dear here? I’ll be in North Carolina for a while in April, maybe we can meet up&#10;Hope you can hang a good week! I’ll be in North Carolina this April, and it would be nice to meet if timing’s okay.&#10;Just a quick reminder: I’m heading to North Carolina in April and would love to catch up if you’d like.&#10;I’m planning to be there in North Carolina this April; maybe we could meet if you’re around.&#10;Just a friendly note: I’ll be in North Carolina in April and would be happy to meet if you’re free.">
+                <span>话术-13%回复率</span>
+                <span class="bulk-template-rate">13%</span>
+              </div>
+              <div class="bulk-template-item" data-template-name="BBB6-15%回复率" data-template-content="I will stay in North Carolina for some time in April. Let me know whether you would like to meet then." data-template-preview="I will stay in North Carolina for some time in April. Let me know whether you would like to meet then.">
+                <span>BBB6-15%回复率</span>
+                <span class="bulk-template-rate">15%</span>
+              </div>
+              <div class="bulk-template-item" data-template-name="话术-11%回复率" data-template-content="Just a note to say I will be around North Carolina in April. If you are available, I would love to meet." data-template-preview="Just a note to say I will be around North Carolina in April. If you are available, I would love to meet.">
+                <span>话术-11%回复率</span>
+                <span class="bulk-template-rate">11%</span>
+              </div>
+            </div>
+            <div class="bulk-template-empty is-hidden" id="bulkTemplateEmpty">未找到匹配模板，请尝试其他关键词。</div>
+          </div>
+
+          <div class="bulk-sms-main-actions">
+            <div class="bulk-sms-note">未识别的变量或错误格式会在发送前提示校验。</div>
+          </div>
+        </section>
+
+        <section class="bulk-sms-preview-panel">
+          <div class="bulk-sms-preview-head">
+            <div>
+              <div class="bulk-sms-preview-title">发送内容预览</div>
+              <div class="bulk-sms-preview-copy">右侧独立预览，确认换行、变量和最终展示效果。</div>
+            </div>
+            <button class="bulk-sms-btn primary" id="bulkPreviewBtn" type="button">一键产码预览</button>
+          </div>
+          <textarea class="bulk-sms-textarea preview" id="bulkSmsPreview" spellcheck="false">Dear here? I’ll be in North Carolina for a while in April, maybe we can meet up
+Hope you can hang a good week! I’ll be in North Carolina this April, and it would be nice to meet if timing’s okay.
+Just a quick reminder: I’m heading to North Carolina in April and would love to catch up if you’d like.
+I’m planning to be there in North Carolina this April; maybe we could meet if you’re around.
+Just a friendly note: I’ll be in North Carolina in April and would be happy to meet if you’re free.</textarea>
+        </section>
+      </div>
+
+      <div class="bulk-sms-foot">
+        <button class="bulk-sms-btn" type="button" data-close-bulk-sms>取消</button>
+        <button class="bulk-sms-btn primary" type="button">确认发送</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="float-chat">
+    <div class="float-chat-head">在线工单助手</div>
+    <div class="float-chat-body">
+      新布局已切成摘要优先的首页结构。
+      <button class="float-chat-btn" type="button">立即咨询</button>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const navItems = Array.from(document.querySelectorAll(".nav-item[data-target]"));
+      const views = Array.from(document.querySelectorAll(".view-panel[data-view]"));
+      const accountToggle = document.getElementById("accountToggle");
+      const accountDrawer = document.getElementById("accountDrawer");
+      const statsModal = document.getElementById("statsModal");
+      const bulkSmsModal = document.getElementById("bulkSmsModal");
+      const bulkTemplateBox = document.getElementById("bulkTemplateBox");
+      const bulkTemplateInput = document.getElementById("bulkTemplateInput");
+      const bulkTemplateTrigger = document.getElementById("bulkTemplateTrigger");
+      const bulkTemplateList = document.getElementById("bulkTemplateList");
+      const bulkTemplateEmpty = document.getElementById("bulkTemplateEmpty");
+      const bulkSmsEditor = document.getElementById("bulkSmsEditor");
+      const bulkSmsPreview = document.getElementById("bulkSmsPreview");
+      const bulkPreviewBtn = document.getElementById("bulkPreviewBtn");
+      const statsTriggers = Array.from(document.querySelectorAll(".stats-trigger"));
+      const bulkSmsTriggers = Array.from(document.querySelectorAll(".bulk-sms-trigger"));
+      const statsClosers = Array.from(document.querySelectorAll("[data-close-stats]"));
+      const bulkSmsClosers = Array.from(document.querySelectorAll("[data-close-bulk-sms]"));
+      const bulkTemplateItems = Array.from(document.querySelectorAll(".bulk-template-item"));
+
+      function closeAccountDrawer() {
+        if (accountDrawer) accountDrawer.classList.add("is-hidden");
+      }
+
+      function openAccountDrawer() {
+        if (accountDrawer) accountDrawer.classList.remove("is-hidden");
+      }
+
+      function closeStatsModal() {
+        if (statsModal) statsModal.classList.add("is-hidden");
+      }
+
+      function openStatsModal() {
+        if (statsModal) statsModal.classList.remove("is-hidden");
+      }
+
+      function closeBulkSmsModal() {
+        if (bulkSmsModal) bulkSmsModal.classList.add("is-hidden");
+      }
+
+      function openBulkSmsModal() {
+        if (bulkSmsModal) bulkSmsModal.classList.remove("is-hidden");
+      }
+
+      function syncBulkPreview() {
+        if (!bulkSmsEditor || !bulkSmsPreview) return;
+        const content = bulkSmsEditor.value.trim();
+        bulkSmsPreview.value = content ? `Dear here? ${content}` : "";
+      }
+
+      function selectTemplate(item) {
+        if (!item || !bulkTemplateInput || !bulkSmsEditor || !bulkSmsPreview) return;
+
+        bulkTemplateItems.forEach((templateItem) => {
+          templateItem.classList.toggle("active", templateItem === item);
+        });
+
+        bulkTemplateInput.value = item.dataset.templateName || "";
+        bulkSmsEditor.value = item.dataset.templateContent || "";
+        bulkSmsPreview.value = item.dataset.templatePreview || item.dataset.templateContent || "";
+      }
+
+      function filterTemplates() {
+        if (!bulkTemplateInput || !bulkTemplateList || !bulkTemplateEmpty) return;
+
+        const keyword = bulkTemplateInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        bulkTemplateItems.forEach((item) => {
+          const name = (item.dataset.templateName || item.textContent || "").toLowerCase();
+          const visible = !keyword || name.includes(keyword);
+          item.classList.toggle("is-hidden", !visible);
+          if (visible) visibleCount += 1;
+        });
+
+        bulkTemplateEmpty.classList.toggle("is-hidden", visibleCount > 0);
+      }
+
+      function setView(target) {
+        navItems.forEach((item) => {
+          item.classList.toggle("active", item.dataset.target === target);
+        });
+
+        views.forEach((view) => {
+          view.classList.toggle("is-hidden", view.dataset.view !== target);
+        });
+      }
+
+      navItems.forEach((item) => {
+        item.addEventListener("click", () => setView(item.dataset.target));
+      });
+
+      statsTriggers.forEach((item) => {
+        item.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openStatsModal();
+        });
+      });
+
+      statsClosers.forEach((item) => {
+        item.addEventListener("click", closeStatsModal);
+      });
+
+      bulkSmsTriggers.forEach((item) => {
+        item.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openBulkSmsModal();
+        });
+      });
+
+      bulkSmsClosers.forEach((item) => {
+        item.addEventListener("click", closeBulkSmsModal);
+      });
+
+      bulkTemplateItems.forEach((item) => {
+        item.addEventListener("click", () => {
+          selectTemplate(item);
+        });
+      });
+
+      if (bulkTemplateInput) {
+        bulkTemplateInput.addEventListener("focus", () => {
+          bulkTemplateList?.classList.remove("is-hidden");
+          bulkTemplateBox?.classList.add("active");
+        });
+
+        bulkTemplateInput.addEventListener("input", () => {
+          bulkTemplateList?.classList.remove("is-hidden");
+          filterTemplates();
+        });
+      }
+
+      if (bulkTemplateTrigger) {
+        bulkTemplateTrigger.addEventListener("click", () => {
+          bulkTemplateList?.classList.toggle("is-hidden");
+          bulkTemplateBox?.classList.toggle("active", !(bulkTemplateList && bulkTemplateList.classList.contains("is-hidden")));
+        });
+      }
+
+      if (bulkPreviewBtn) {
+        bulkPreviewBtn.addEventListener("click", syncBulkPreview);
+      }
+
+      if (bulkSmsEditor) {
+        bulkSmsEditor.addEventListener("input", () => {
+          if (!bulkTemplateInput || bulkTemplateInput.value.trim() === "") {
+            syncBulkPreview();
+          }
+        });
+      }
+
+      if (accountToggle && accountDrawer) {
+        accountToggle.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const opening = accountDrawer.classList.contains("is-hidden");
+          if (opening) {
+            openAccountDrawer();
+          } else {
+            closeAccountDrawer();
+          }
+        });
+
+        accountDrawer.addEventListener("click", (event) => {
+          event.stopPropagation();
+        });
+
+        document.addEventListener("click", closeAccountDrawer);
+      }
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeAccountDrawer();
+          closeStatsModal();
+          closeBulkSmsModal();
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        if (bulkTemplateBox && !bulkTemplateBox.contains(event.target) && bulkTemplateList) {
+          bulkTemplateList.classList.add("is-hidden");
+          bulkTemplateBox.classList.remove("active");
+        }
+      });
+
+      filterTemplates();
+
+      setView("mass");
+    })();
+  </script>
+</body>
+</html>
